@@ -27,30 +27,44 @@ import Sidebar from './components/Sidebar';
 import TriggerAIScreening from './pages/AIScreening/TriggerAIScreening';
 // ===================================================================
 
+
+const IS_PREVIEW = true;  // toggle this to false to re-enable real login/auth
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (localStorage.getItem("accessToken")) {
-      http.get('/user/auth').then((res) => {
-        setUser(res.data.user);
-        setLoading(false);
-      }).catch(() => {
-        localStorage.clear();
-        setLoading(false);
-      });
-    } else {
+    if (IS_PREVIEW) {
+      // For preview, just set a dummy user and stop loading immediately
+      setUser({ name: 'Preview User', email: 'preview@example.com' });
       setLoading(false);
+    } else {
+      if (localStorage.getItem("accessToken")) {
+        http.get('/user/auth').then((res) => {
+          setUser(res.data.user);
+          setLoading(false);
+        }).catch(() => {
+          localStorage.clear();
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
     }
   }, []);
+  
 
   const logout = () => {
-    localStorage.clear();
-    setUser(null);
-    window.location = "/login";
+    if (IS_PREVIEW) {
+      setUser(null);
+    } else {
+      localStorage.clear();
+      setUser(null);
+      window.location = "/login";
+    }
   };
-
+  
   if (loading) {
     return (
       <ThemeProvider theme={MyTheme}>
